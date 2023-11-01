@@ -1,6 +1,6 @@
 from __future__ import unicode_literals
 
-from yt_dlp.extractor.tomon import InfoExtractor
+from yt_dlp.extractor.common import InfoExtractor
 from yt_dlp.utils import js_to_json, urljoin
 
 
