@@ -1,10 +1,14 @@
 from __future__ import unicode_literals
 
-from yt_dlp.extractor.common import InfoExtractor
-from yt_dlp.utils import js_to_json, urljoin
+from .common import InfoExtractor
+from ..utils import js_to_json, urljoin
 
-
-videolink = r"document\.getElementById\('" + r"(?:'\+')?".join('videoolink') + r"'\)\.innerHTML\s*=\s*(?P<data>" + r".*" + r")"
+# strings are obfuscated by concatenating substrings
+split_string_part = r'(?:%s|%s)' % (r'"(?:[^"\\]|\\.)*"',
+                                    r"'(?:[^'\\]|\\.)*'")
+split_string = r'(?:' + split_string_part + r'(?:\s*\+\s*' + split_string_part + r')*)'
+videolink = r"(?:'\+')?".join('videolink')
+videolink = r"document\.getElementById\('" + videolink + r"'\)\.innerHTML\s*=\s*(?P<data>" + split_string + r")"
 
 
 class StreamtapeIE(InfoExtractor):
@@ -26,12 +30,17 @@ class StreamtapeIE(InfoExtractor):
 
         webpage = self._download_webpage(url, video_id)
 
-        search_results = self._html_search_regex(videolink, webpage, 'video', group='data').split('+')
-        video = "https:" + search_results[0].strip().strip('"') + search_results[1].split("'")[1][2:] 
+        video = self._html_search_regex(videolink, webpage, 'video', group='data')
+        video = video.split('+')
+        video = [self._parse_json(v, video_id, js_to_json) for v in video]
+        video = urljoin(url, ''.join(video))
 
-        poster = self._html_search_regex(r' id="mainvideo"[^>]* poster="(?P<data>.*?)"',
-                                         webpage, 'poster', group='data')
-        poster = urljoin(url, poster)
+        try:
+            poster = self._html_search_regex(r' id="mainvideo"[^>]* poster="(?P<data>.*?)"',
+                                             webpage, 'poster', group='data')
+            poster = urljoin(url, poster)
+        except ValueError:
+            poster = None
 
         title = self._og_search_title(webpage)
 
