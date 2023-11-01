@@ -1,7 +1,7 @@
 from __future__ import unicode_literals
 
-from .common import InfoExtractor
-from ..utils import js_to_json, urljoin
+from yt_dlp.extractor.common import InfoExtractor
+from yt_dlp.utils import js_to_json, urljoin
 
 # strings are obfuscated by concatenating substrings
 split_string_part = r'(?:%s|%s)' % (r'"(?:[^"\\]|\\.)*"',
